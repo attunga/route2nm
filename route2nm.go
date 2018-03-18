@@ -65,11 +65,11 @@ func main() {
 	// Get Routes in the Network Manager Format
 	routesNMFormat := getRoutesNMFormat(routes)
 
-	// Write New Routes to Disk
-    fmt.Println(writeProcessedLogFileToDisk(getNextFileName(filename, 0), routesNMFormat))
-
 	//Display New Routes to Screen
 	fmt.Println(routesNMFormat)
+
+	// Write New Routes to Disk
+    fmt.Println(writeProcessedLogFileToDisk(getNextFileName(filename, 0), routesNMFormat))
 
 }
 
