@@ -15,3 +15,9 @@
 
 # Golang
 .idea/
+
+# Test Route Files
+route-*
+
+# Directory File ..
+.directory
