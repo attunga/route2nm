@@ -38,6 +38,7 @@ type route struct {
 	ipaddress string // An ip address
 	netmask   string // The network Prefix as a string
 	gateway   string // The network gateway
+	firstIPOctet int // The first Octect of the IP Address used for sorting
 }
 
 func main() {
@@ -57,7 +58,7 @@ func main() {
 
 	// Sort the slice by IP Addresses ... needs work .... special function maybe but for now it sorts similar addresses
 	// together which is handy for fault finding
-	sort.SliceStable(routes, func(i, j int) bool { return routes[i].ipaddress < routes[j].ipaddress })
+	sort.SliceStable(routes, func(i, j int) bool { return routes[i].firstIPOctet < routes[j].firstIPOctet })
 
 	// Get Routes in the Network Manager Format
 	routesNMFormat := getRoutesNMFormat(routes)
@@ -122,6 +123,7 @@ func getRoutes(oldRoutesFile string, routes []route) []route {
 		ipRoute.ipaddress = ipAndMask[0]
 		ipRoute.netmask = getExpandedNetmask(ipAndMask[1])
 		ipRoute.gateway = lineSplit[2] // may need better error checking
+		ipRoute.firstIPOctet = getFirstOctet(ipAndMask[0])
 
 		// append route to Routes
 		routes = append(routes, *ipRoute)
@@ -137,6 +139,20 @@ func getRoutes(oldRoutesFile string, routes []route) []route {
 
 	return routes
 }
+func getFirstOctet(IPAddress string) int {
+
+	ipSplit := strings.Split(IPAddress, ".")
+
+	firstOctect, err := strconv.Atoi(ipSplit[0])
+	if err != nil {
+		// handle error
+		fmt.Println(err)
+		os.Exit(2)
+	}
+
+	return firstOctect
+}
+
 
 
 func getFileName() string {
