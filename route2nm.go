@@ -38,7 +38,7 @@ type route struct {
 	ipaddress string // An ip address
 	netmask   string // The network Prefix as a string
 	gateway   string // The network gateway
-	firstIPOctet int // The first Octect of the IP Address used for sorting
+	ipValue   int    // A calculated value from all octets used for sorting
 }
 
 func main() {
@@ -58,7 +58,7 @@ func main() {
 
 	// Sort the slice by IP Addresses ... needs work .... special function maybe but for now it sorts similar addresses
 	// together which is handy for fault finding
-	sort.SliceStable(routes, func(i, j int) bool { return routes[i].firstIPOctet < routes[j].firstIPOctet })
+	sort.SliceStable(routes, func(i, j int) bool { return routes[i].ipValue < routes[j].ipValue })
 
 	// Get Routes in the Network Manager Format
 	routesNMFormat := getRoutesNMFormat(routes)
@@ -89,8 +89,6 @@ func getRoutesNMFormat(routes []route) string {
 }
 
 func getRoutes(oldRoutesFile string, routes []route) []route {
-
-	// Regex to Detect IP Addresses in line
 
 	// Loop through the String
 	scanner := bufio.NewScanner(strings.NewReader(oldRoutesFile))
@@ -123,7 +121,7 @@ func getRoutes(oldRoutesFile string, routes []route) []route {
 		ipRoute.ipaddress = ipAndMask[0]
 		ipRoute.netmask = getExpandedNetmask(ipAndMask[1])
 		ipRoute.gateway = lineSplit[2] // may need better error checking
-		ipRoute.firstIPOctet = getFirstOctet(ipAndMask[0])
+		ipRoute.ipValue = getIPValue(ipAndMask[0])
 
 		// append route to Routes
 		routes = append(routes, *ipRoute)
@@ -131,16 +129,14 @@ func getRoutes(oldRoutesFile string, routes []route) []route {
 		//fmt.Println(scanner.Text())
 	}
 
-	// Reject Line that says Default = Maybe Export this line into a Seperate File??
-
-	// Reject lines starting with a hash or that are empty
-
-	// Extract elements from Found Line
-
 	return routes
 }
-func getFirstOctet(IPAddress string) int {
 
+func getIPValue(IPAddress string) int {
+
+	ipValue := 0
+
+	// Split the IP address into for single numbers
 	ipSplit := strings.Split(IPAddress, ".")
 
 	firstOctect, err := strconv.Atoi(ipSplit[0])
@@ -149,11 +145,34 @@ func getFirstOctet(IPAddress string) int {
 		fmt.Println(err)
 		os.Exit(2)
 	}
+	ipValue = ipValue + (firstOctect * 9000000)
 
-	return firstOctect
+	secondOctect, err := strconv.Atoi(ipSplit[1])
+	if err != nil {
+		// handle error
+		fmt.Println(err)
+		os.Exit(2)
+	}
+	ipValue = ipValue + (secondOctect * 60000)
+
+	thirdOctect, err := strconv.Atoi(ipSplit[2])
+	if err != nil {
+		// handle error
+		fmt.Println(err)
+		os.Exit(2)
+	}
+	ipValue = ipValue + (thirdOctect * 300)
+
+	forthOctect, err := strconv.Atoi(ipSplit[3])
+	if err != nil {
+		// handle error
+		fmt.Println(err)
+		os.Exit(2)
+	}
+	ipValue = ipValue + forthOctect
+
+	return ipValue * 100
 }
-
-
 
 func getFileName() string {
 
@@ -241,7 +260,6 @@ func getNextFileName(fileame string, count int) string {
 	count++
 	return getNextFileName(fileame, count)
 }
-
 
 // Messy Messy Function,  must be a better way to do this ... sticking at the end of the file
 func getExpandedNetmask(shortNetmask string) string {
