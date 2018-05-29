@@ -20,15 +20,15 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"io/ioutil"
 	"bufio"
-	"strings"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
 	"regexp"
 	"sort"
-	"log"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -56,8 +56,7 @@ func main() {
 	// put any routes found into a slice of routes
 	routes = getRoutes(oldRoutesFile, routes)
 
-	// Sort the slice by IP Addresses ... needs work .... special function maybe but for now it sorts similar addresses
-	// together which is handy for fault finding
+    // Sorts by IPValue gives a proper sort by value rather than string representation.
 	sort.SliceStable(routes, func(i, j int) bool { return routes[i].ipValue < routes[j].ipValue })
 
 	// Get Routes in the Network Manager Format
@@ -126,12 +125,12 @@ func getRoutes(oldRoutesFile string, routes []route) []route {
 		// append route to Routes
 		routes = append(routes, *ipRoute)
 
-		//fmt.Println(scanner.Text())
 	}
 
 	return routes
 }
 
+// Get the value of the IP address,  this is purely used for sorting
 func getIPValue(IPAddress string) int {
 
 	ipValue := 0
@@ -178,11 +177,11 @@ func getFileName() string {
 
 	// Check we got arguments passwed in,  exit if none
 	if len(os.Args) < 2 {
-		fmt.Println("Please give the name of the file to be converted")
+		fmt.Println("Please give the name of the file to be converted as a parameter")
 		os.Exit(0)
 	}
 
-	// First parameters is looked at only
+	// We only worry about the first parameter
 	filename := os.Args[1]
 
 	//Check if file exists
@@ -208,14 +207,15 @@ func fileExists(filename string) bool {
 // Function to read the file into a string
 func getFileString(logfile string) string {
 
+	// As we are just reading in the file - there is no need to close it,  it is not opened for writing
 	fileBytes, err := ioutil.ReadFile(logfile)
 	if err != nil {
-		// Process a log file name error here ...
-		//log.Fatal(err)
+		// We have already checked for a file existance so at this state and error would be that it cannot be read
+		fmt.Println("File to be processed could not be read")
 		fmt.Println(err)
 		os.Exit(0)
 	}
-	//defer ioutil.close(logfile)
+
 	return string(fileBytes)
 }
 
@@ -261,7 +261,7 @@ func getNextFileName(fileame string, count int) string {
 	return getNextFileName(fileame, count)
 }
 
-// Messy Messy Function,  must be a better way to do this ... sticking at the end of the file
+// This function prioritises ease of code review over succinctness - so at the end.
 func getExpandedNetmask(shortNetmask string) string {
 
 	switch shortNetmask {
@@ -322,7 +322,7 @@ func getExpandedNetmask(shortNetmask string) string {
 	case "32":
 		return "255.255.255.255"
 	default:
-		// If no match, maybe it is in the long format already?
+		// If no match, it is most likely in the long form already.
 		return shortNetmask
 	}
 
