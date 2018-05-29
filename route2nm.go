@@ -56,7 +56,7 @@ func main() {
 	// put any routes found into a slice of routes
 	routes = getRoutes(oldRoutesFile, routes)
 
-    // Sorts by IPValue gives a proper sort by value rather than string representation.
+	// Sorts by IPValue gives a proper sort by value rather than string representation.
 	sort.SliceStable(routes, func(i, j int) bool { return routes[i].ipValue < routes[j].ipValue })
 
 	// Get Routes in the Network Manager Format
@@ -175,14 +175,23 @@ func getIPValue(IPAddress string) int {
 
 func getFileName() string {
 
-	// Check we got arguments passwed in,  exit if none
+	runningProgram := os.Args[0] // For clarity, the name of the executable used to start the program
+
+	// Check we got arguments passed in,  exit if none
 	if len(os.Args) < 2 {
 		fmt.Println("Please give the name of the file to be converted as a parameter")
+		fmt.Println("Usage: ", runningProgram, "[routefile]")
+		fmt.Println("For further instruction use", runningProgram, " --help")
 		os.Exit(0)
 	}
 
-	// We only worry about the first parameter
-	filename := os.Args[1]
+	// We only worry about the first parameter it could be a filename or a --help request.
+	filename := strings.Trim(os.Args[1], " ")
+
+	if filename == "--help" || filename == "-help" {
+		fmt.Println(getHelp(runningProgram))
+		os.Exit(0)
+	}
 
 	//Check if file exists
 	if !fileExists(filename) {
@@ -326,4 +335,29 @@ func getExpandedNetmask(shortNetmask string) string {
 		return shortNetmask
 	}
 
+}
+
+func getHelp(runningProgram string) string {
+
+	helpMessage := "Route2NM Help \n"
+	helpMessage += " \n"
+	helpMessage += " Route2NM is a small utility used to convert the older network style routes to the newer \n"
+	helpMessage += " Network Manager Format.  This utility is of most use when upgrading servers from \n"
+	helpMessage += " servers using the non network manger format such as RHEL/CentOS 5/6 to RHEL/CentOS 7 \n"
+	helpMessage += " \n"
+	helpMessage += "Usage: " + runningProgram + " [routefile]     Convert Older Route File to Newer Network Manager Format\n"
+	helpMessage += " \n"
+	helpMessage += " The older route file will be in the format of:\n"
+	helpMessage += "   192.168.1.100/24 via 192.168.151.1 dev eth0 \n"
+	helpMessage += " \n"
+	helpMessage += " And will convert the route to the newer format of:\n"
+	helpMessage += "   ADDRESS10=192.168.1.100 \n"
+	helpMessage += "   NETMASK10=255.255.255.0 \n"
+	helpMessage += "   GATEWAY10=192.168.151.1 \n"
+	helpMessage += "   METRIC10=0 \n"
+	helpMessage += " \n"
+	helpMessage += "Parameters \n"
+	helpMessage += "--help:  This Help display \n"
+	helpMessage += " \n"
+	return helpMessage
 }
