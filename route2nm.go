@@ -32,8 +32,7 @@ import (
 	"time"
 )
 
-// Create a type that handles a single network routing line
-
+// Holds information about the new route including information used for sorting
 type route struct {
 	ipaddress string // An ip address
 	netmask   string // The network Prefix as a string
